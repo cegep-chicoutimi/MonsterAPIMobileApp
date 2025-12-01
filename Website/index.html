@@ -1,0 +1,152 @@
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <link rel="stylesheet" href="./css/styles.css">
+        <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/2619/2619285.png">
+        <title>MyLittleRPG</title>
+    </head>
+    <body>
+        <div class="container mt-5">
+            <div class="row mt-5 fondPrincipal rounded py-5 text-white">
+                <h1 class="text-center">
+                    <i class="fa-solid fa-map-location"></i> Visualiseur de carte
+                </h1>
+            </div>
+        </div>
+        <div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+        
+        <div class="container d-flex justify-content-end mt-3">
+            <button id="deconnexionBtn" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</button>
+        </div>
+        <div class="container d-flex justify-content-end mt-3">
+            <button id="connexionBtn" class="btn btn-warning"><i class="fa-solid fa-right-from-bracket"></i> Connexion</button>
+        </div>
+        <div class="container mt-3 mb-3">
+            <div class="row">
+                <div class="col-3 rounded py-3 text-white">
+                    <!-- Panneau avec onglets -->
+                    <div class="container fondPrincipal rounded py-3">
+                        <ul class="nav nav-tabs" id="infoPanelTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-panel" type="button">
+                                    <i class="fa-solid fa-circle-info"></i> Info
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="character-tab" data-bs-toggle="tab" data-bs-target="#character-panel" type="button">
+                                    <i class="fa-solid fa-user-secret"></i> Perso
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="quests-tab" data-bs-toggle="tab" data-bs-target="#quests-panel" type="button">
+                                    <i class="fa-solid fa-scroll"></i> Quêtes
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="legend-tab" data-bs-toggle="tab" data-bs-target="#legend-panel" type="button">
+                                    <i class="fa-solid fa-book"></i> Légende
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content mt-3" id="infoPanelContent">
+                            <!-- Onglet Infos plateau/API -->
+                            <div class="tab-pane fade show active" id="info-panel" role="tabpanel">
+                                <p class="mt-1 fondSecondaire rounded text-center p-2">Taille : 50x50</p>
+                                <p class="mt-1 fondSecondaire rounded text-center p-2">Zone : 5x5 tuiles</p>
+                                <p id="status" class="mt-1 fondSecondaire rounded text-center p-2">Status API : </p>
+                            </div>
+                            <!-- Onglet Perso -->
+                            <div class="tab-pane fade" id="character-panel" role="tabpanel">
+                                <div id="perso_info"></div>
+                            </div>
+                            <!-- Onglet Quêtes -->
+                            <div class="tab-pane fade" id="quests-panel" role="tabpanel">
+                                <div id="quests_info">
+                                    <p class="text-center text-muted">Chargement des quêtes...</p>
+                                </div>
+                            </div>
+                            <!-- Onglet Légende -->
+                            <div class="tab-pane fade" id="legend-panel" role="tabpanel">
+                                <p class="mt-1 fondSecondaire rounded p-2">🟩 | 🌱 Herbe</p>
+                                <p class="mt-1 fondSecondaire rounded p-2">🟦 | 🌊 Eau</p>
+                                <p class="mt-1 fondSecondaire rounded p-2">🟫 | ⛰️ Montagne</p>
+                                <p class="mt-1 fondSecondaire rounded p-2">🟧 | 🌳 Forêt</p>
+                                <p class="mt-1 fondSecondaire rounded p-2">⬜ | 🏘️ Ville</p>
+                                <p class="mt-1 fondSecondaire rounded p-2">⬛ | 🛣️ Route</p>
+                                <hr>
+                                <p class="mt-1 fondSecondaire rounded p-2">🟥 | 🚫 Non accessible</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Déplacement -->
+                    <div class="container fondPrincipal rounded mt-3 py-3">
+                        <p class="fw-bold mb-3 text-center"><i class="fa-solid fa-arrows-up-down-left-right"></i> Déplacement</p>
+                        <hr>
+                        <div class="d-flex justify-content-center mb-2">
+                            <button id="btn-up" class="btn btn-primary"><i class="fa-solid fa-arrow-up"></i></button>
+                        </div>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button id="btn-left" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i></button>
+                            <button id="btn-down" class="btn btn-primary"><i class="fa-solid fa-arrow-down"></i></button>
+                            <button id="btn-right" class="btn btn-primary"><i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-9 mt-3 rounded fondPrincipal text-white py-2">
+                    <div class="container d-flex justify-content-between">
+                        <h2 class="py-2"><i class="fa-solid fa-map-pin"></i> Carte du monde</h2>
+                        <p class="col-2 py-2 text-center fw-bold rounded fondTernaire">Zone : 0,0 → 50,50</p>
+                    </div>            
+                    <div class="grille-container" id="grilleTuiles"></div>
+                    <div class="container text-center">
+                        <hr>
+                        <h5 class="py2"><a href="" id="modeSombre">Mode sombre</a> | <a href="" id="modeClair">Mode clair</a></h5>
+                    </div>
+                    <div class="container text-center">
+                        <hr>
+                        <label for="quantity" class="form-label">ID du monstre</label>
+                        <input type="number" class="form-control text-center" id="simulateurID" value="1" min="1" step="1">
+                        <button class="btn btn-dark mt-3" id="simulateur">Simuler un combat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="pokeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Informations sur la tuile</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="simulateurModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Simulation de combat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="./js/script.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.2.3/js/bootstrap.min.js"></script>
+    </body>
+</html>
