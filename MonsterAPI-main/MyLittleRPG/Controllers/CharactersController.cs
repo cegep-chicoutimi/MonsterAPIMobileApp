@@ -135,6 +135,10 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     if (instanceMonstre.pointsVieActuels <= 0)
                     {
                         // victoire du joueur
+                        // Enregistrer la chasse dans l'historique
+                        var chasseRecord = new ChasseHistorique(character.idPersonnage, monstre.idMonster, true);
+                        _context.ChasseHistorique.Add(chasseRecord);
+
                         Monster? monstreType = _context.Monsters.FirstOrDefault(m => m.idMonster == instanceMonstre.monstreID);
                         Quest? quest_monstres = _context.Quest.FirstOrDefault(q => q.idPersonnage == character.idPersonnage && q.Type == "monstres" && q.TypeMonstre == monstreType!.type1);
                         if (quest_monstres != null)
@@ -187,6 +191,10 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     else if (character.pv <= 0)
                     {
                         // defaite player
+                        // Enregistrer la défaite dans l'historique
+                        var chasseRecord = new ChasseHistorique(character.idPersonnage, monstre.idMonster, false);
+                        _context.ChasseHistorique.Add(chasseRecord);
+
                         character.pv = character.pvMax;
                         message = "Défaite ! Vous êtes téléporté à la ville et vos HP sont restaurés.";
                         resultat = false;
@@ -194,6 +202,10 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     else
                     {
                         // le joueur reste sur sa position d'origine
+                        // Enregistrer le combat indécis
+                        var chasseRecord = new ChasseHistorique(character.idPersonnage, monstre.idMonster, false);
+                        _context.ChasseHistorique.Add(chasseRecord);
+
                         message = $"Combat indécis: vous avez infligé {degatsMonstre} dégâts et reçu {degatsJoueur}.";
                         resultat = false;
                     }

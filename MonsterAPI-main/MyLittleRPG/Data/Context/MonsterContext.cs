@@ -12,6 +12,8 @@ namespace MyLittleRPG_ElGuendouz.Data.Context
         public DbSet<User> User { get; set; }
         public DbSet<InstanceMonstre> InstanceMonstre { get; set; }
         public DbSet<Quest> Quest { get; set; }
+        public DbSet<QuestTimer> QuestTimer { get; set; }
+        public DbSet<ChasseHistorique> ChasseHistorique { get; set; }
 
         public MonsterContext(DbContextOptions<MonsterContext> options) : base(options) { }
 
@@ -42,6 +44,20 @@ namespace MyLittleRPG_ElGuendouz.Data.Context
                 .HasOne<Character>()
                 .WithMany()
                 .HasForeignKey(q => q.idPersonnage)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuration de la relation entre ChasseHistorique et Character
+            modelBuilder.Entity<ChasseHistorique>()
+                .HasOne<Character>()
+                .WithMany()
+                .HasForeignKey(ch => ch.idPersonnage)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuration de la relation entre ChasseHistorique et Monster
+            modelBuilder.Entity<ChasseHistorique>()
+                .HasOne<Monster>()
+                .WithMany()
+                .HasForeignKey(ch => ch.idMonstre)
                 .OnDelete(DeleteBehavior.Restrict);
         }
 

@@ -25,6 +25,7 @@ namespace MyLittleRPG_ElGuendouz.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            await InitializeTimerAsync(stoppingToken);
             await CheckAndGenerateQuestsAsync(stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
@@ -34,12 +35,53 @@ namespace MyLittleRPG_ElGuendouz.Services
             }
         }
 
+        private async Task InitializeTimerAsync(CancellationToken stoppingToken)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<MonsterContext>();
+
+                var timer = await context.QuestTimer.FirstOrDefaultAsync(stoppingToken);
+                
+                if (timer == null)
+                {
+                    timer = new QuestTimer
+                    {
+                        LastGenerationTime = DateTime.UtcNow,
+                        NextGenerationTime = DateTime.UtcNow.AddMinutes(NB_MINUTES),
+                        IntervalMinutes = NB_MINUTES
+                    };
+                    context.QuestTimer.Add(timer);
+                    await context.SaveChangesAsync(stoppingToken);
+                    _logger.LogInformation("Timer de quêtes initialisé.");
+                }
+                else
+                {
+                    _logger.LogInformation($"Timer existant trouvé. Prochaine génération: {timer.NextGenerationTime}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erreur lors de l'initialisation du timer: {ex.Message}");
+            }
+        }
+
         private async Task CheckAndGenerateQuestsAsync(CancellationToken stoppingToken)
         {
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<MonsterContext>();
+
+                // Mettre à jour le timer
+                var timer = await context.QuestTimer.FirstOrDefaultAsync(stoppingToken);
+                if (timer != null)
+                {
+                    timer.LastGenerationTime = DateTime.UtcNow;
+                    timer.NextGenerationTime = DateTime.UtcNow.AddMinutes(NB_MINUTES);
+                    context.QuestTimer.Update(timer);
+                }
 
                 var characters = await context.Character.ToListAsync(stoppingToken);
 
