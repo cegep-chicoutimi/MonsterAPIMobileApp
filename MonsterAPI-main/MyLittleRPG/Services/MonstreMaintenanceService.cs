@@ -58,6 +58,12 @@ namespace MyLittleRPG_ElGuendouz.Services
                 _logger.LogWarning("Seulement {Current}/300 monstres. Génération automatique de {ToGenerate} monstres...", currentCount, toGenerate);
 
                 var baseMonsters = await GetRandomMonstersAsync(toGenerate, cancellationToken);
+                
+                if (baseMonsters.Count == 0)
+                {
+                    _logger.LogError("Impossible de générer des monstres : aucun monstre de base dans la table Monsters");
+                    return;
+                }
 
                 var emptyTiles = await context.Tuiles
                            .Where(t => t.EstTraversable
@@ -68,9 +74,22 @@ namespace MyLittleRPG_ElGuendouz.Services
 
                 emptyTiles = emptyTiles.OrderBy(_ => _random.Next()).Take(toGenerate).ToList();
 
+                if (emptyTiles.Count == 0)
+                {
+                    _logger.LogWarning("Aucune tuile disponible pour générer des monstres");
+                    return;
+                }
+
+                _logger.LogInformation("Tuiles vides disponibles : {EmptyTilesCount}, Monstres à générer : {MonstersCount}", emptyTiles.Count, baseMonsters.Count);
+
                 var villes = await context.Tuiles.Where(t => t.Type == TypeTuile.VILLE).ToListAsync(cancellationToken);
 
-                for (int i = 0; i < baseMonsters.Count; i++)
+                // Ne générer que le nombre de monstres pour lesquels on a des tuiles disponibles
+                int monstersToGenerate = Math.Min(baseMonsters.Count, emptyTiles.Count);
+                
+                _logger.LogInformation("Génération de {Count} monstres sur {Total} demandés", monstersToGenerate, toGenerate);
+
+                for (int i = 0; i < monstersToGenerate; i++)
                 {
                     var monster = baseMonsters[i];
                     var tile = emptyTiles[i];
@@ -93,7 +112,8 @@ namespace MyLittleRPG_ElGuendouz.Services
                 }
 
                 await context.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("{Generated} monstres ont été ajoutés. Total = 300.", toGenerate);
+                int newTotal = currentCount + monstersToGenerate;
+                _logger.LogInformation("{Generated} monstres ont été ajoutés. Total actuel : {Total}/300", monstersToGenerate, newTotal);
             }
             else
             {
