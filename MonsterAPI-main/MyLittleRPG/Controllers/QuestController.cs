@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using MyLittleRPG_ElGuendouz.Data.Context;
 using MyLittleRPG_ElGuendouz.Models;
 using MyLittleRPG_ElGuendouz.DTOs;
