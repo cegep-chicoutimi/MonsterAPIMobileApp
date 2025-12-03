@@ -140,15 +140,35 @@ namespace MyLittleRPG_ElGuendouz.Services
 
                                 case 2:
                                     {
+                                        // Vérifier s'il y a des tuiles disponibles
+                                        if (!context.Tuiles.Any())
+                                        {
+                                            _logger.LogWarning("Aucune tuile disponible pour créer une quête de type 'tuile'");
+                                            continue;
+                                        }
+
                                         int x, y;
-                                        Tuile tuile;
+                                        Tuile? tuile;
+                                        int attempts = 0;
                                         do
                                         {
                                             x = rand.Next(1, 51);
                                             y = rand.Next(1, 51);
 
-                                            tuile = context.Tuiles.First(t => t.PositionX == x && t.PositionY == y);
-                                        } while (!tuile.EstTraversable);
+                                            tuile = context.Tuiles.FirstOrDefault(t => t.PositionX == x && t.PositionY == y);
+                                            attempts++;
+                                            
+                                            if (attempts > 100)
+                                            {
+                                                _logger.LogWarning("Impossible de trouver une tuile traversable après 100 tentatives");
+                                                break;
+                                            }
+                                        } while (tuile == null || !tuile.EstTraversable);
+
+                                        if (tuile == null || !tuile.EstTraversable)
+                                        {
+                                            continue;
+                                        }
 
                                         newQuest = new Quest
                                         {
