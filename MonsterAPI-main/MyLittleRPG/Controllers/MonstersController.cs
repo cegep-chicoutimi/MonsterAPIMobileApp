@@ -89,6 +89,99 @@ namespace MyLittleRPG_ElGuendouz.Controllers
             });
         }
 
+        [HttpGet("Pokedex/{idPersonnage}")]
+        public async Task<ActionResult<object>> GetPokedex(
+            int idPersonnage,
+            [FromQuery] int offset = 0,
+            [FromQuery] int limit = 20,
+            [FromQuery] string? nom = null,
+            [FromQuery] string? type1 = null,
+            [FromQuery] string? type2 = null,
+            [FromQuery] bool? chasseOnly = null)
+        {
+            const int MAX_LIMIT = 100;
+
+            var character = await _context.Character.FirstOrDefaultAsync(c => c.idPersonnage == idPersonnage);
+            if (character == null)
+            {
+                return NotFound("Personnage non trouvé.");
+            }
+
+            // Limite maximale
+            if (limit > MAX_LIMIT) limit = MAX_LIMIT;
+            if (limit <= 0) limit = 20;
+            if (offset < 0) offset = 0;
+
+            // Obtenir les IDs des monstres chassés par ce personnage
+            var monstresChassesIds = await _context.ChasseHistorique
+                .Where(ch => ch.idPersonnage == idPersonnage)
+                .Select(ch => ch.idMonstre)
+                .Distinct()
+                .ToListAsync();
+
+            IQueryable<Monster> query = _context.Monsters;
+
+            // Filtration par nom
+            if (!string.IsNullOrWhiteSpace(nom))
+            {
+                query = query.Where(m => m.nom.Contains(nom));
+            }
+
+            // Filtration par type1
+            if (!string.IsNullOrWhiteSpace(type1))
+            {
+                query = query.Where(m => m.type1 == type1);
+            }
+
+            // Filtration par type2
+            if (!string.IsNullOrWhiteSpace(type2))
+            {
+                query = query.Where(m => m.type2 == type2);
+            }
+
+            // Filtration par statut chassé
+            if (chasseOnly.HasValue)
+            {
+                if (chasseOnly.Value)
+                {
+                    // Seulement les monstres chassés
+                    query = query.Where(m => monstresChassesIds.Contains(m.idMonster));
+                }
+                else
+                {
+                    // Seulement les monstres non chassés
+                    query = query.Where(m => !monstresChassesIds.Contains(m.idMonster));
+                }
+            }
+
+            // Compter le total avant pagination
+            int total = await query.CountAsync();
+
+            // Pagination
+            var monstres = await query
+                .OrderBy(m => m.idMonster)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            // Ajouter l'info "isChasse" pour chaque monstre
+            var pokedexData = monstres.Select(m => new
+            {
+                Monster = m,
+                IsChasse = monstresChassesIds.Contains(m.idMonster)
+            }).ToList();
+
+            return Ok(new
+            {
+                Total = total,
+                Offset = offset,
+                Limit = limit,
+                Count = pokedexData.Count,
+                TotalChasses = monstresChassesIds.Count,
+                Data = pokedexData
+            });
+        }
+
         [HttpGet("random/{count}")]
         public async Task<ActionResult<IEnumerable<Monster>>> GetRandomMonsters(int count)
         {
