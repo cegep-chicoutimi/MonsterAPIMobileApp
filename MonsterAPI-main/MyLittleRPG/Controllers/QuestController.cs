@@ -60,14 +60,24 @@ namespace MyLittleRPG_ElGuendouz.Controllers
             }
 
             var timeRemaining = timer.NextGenerationTime - DateTime.UtcNow;
-            var isReady = timeRemaining.TotalSeconds <= 0;
+            
+            // Si le timer est expiré, calculer combien de temps jusqu'au prochain cycle
+            if (timeRemaining.TotalSeconds <= 0)
+            {
+                // Calculer combien de cycles de 10 minutes se sont écoulés depuis la dernière génération
+                var timeSinceLastGen = DateTime.UtcNow - timer.LastGenerationTime;
+                var cyclesElapsed = (int)(timeSinceLastGen.TotalMinutes / timer.IntervalMinutes);
+                
+                // Calculer le prochain temps de génération
+                var nextGenTime = timer.LastGenerationTime.AddMinutes((cyclesElapsed + 1) * timer.IntervalMinutes);
+                timeRemaining = nextGenTime - DateTime.UtcNow;
+            }
+            
             var secondsRemaining = Math.Max(0, (int)timeRemaining.TotalSeconds);
             var minutesRemaining = secondsRemaining / QuestTimer.SECONDS_PER_MINUTE;
 
             // Format: "MM:SS"
-            string formattedTime = isReady 
-                ? "00:00" 
-                : $"{minutesRemaining:D2}:{(secondsRemaining % QuestTimer.SECONDS_PER_MINUTE):D2}";
+            string formattedTime = $"{minutesRemaining:D2}:{(secondsRemaining % QuestTimer.SECONDS_PER_MINUTE):D2}";
             
             return Ok(new { FormattedTimeRemaining = formattedTime });
         }
