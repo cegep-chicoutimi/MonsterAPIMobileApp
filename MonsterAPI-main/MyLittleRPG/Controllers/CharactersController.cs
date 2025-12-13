@@ -109,14 +109,14 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     case "niveau":
                         leaderboard = await _context.Character
                             .OrderByDescending(c => c.niveau)
-                            .ThenByDescending(c => c.experience)
+                            .ThenByDescending(c => c.exp)
                             .Take(10)
                             .Select(c => new
                             {
                                 c.idPersonnage,
                                 c.nom,
                                 c.niveau,
-                                c.experience,
+                                c.exp,
                                 Valeur = c.niveau
                             })
                             .Cast<object>()
@@ -142,7 +142,7 @@ namespace MyLittleRPG_ElGuendouz.Controllers
 
                     case "defense":
                         leaderboard = await _context.Character
-                            .OrderByDescending(c => c.defense)
+                            .OrderByDescending(c => c.def)
                             .ThenByDescending(c => c.niveau)
                             .Take(10)
                             .Select(c => new
@@ -150,8 +150,8 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                                 c.idPersonnage,
                                 c.nom,
                                 c.niveau,
-                                c.defense,
-                                Valeur = c.defense
+                                c.def,
+                                Valeur = c.def
                             })
                             .Cast<object>()
                             .ToListAsync();
@@ -160,7 +160,7 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     case "pointvie":
                     case "pv":
                         leaderboard = await _context.Character
-                            .OrderByDescending(c => c.pointVie)
+                            .OrderByDescending(c => c.pvMax)
                             .ThenByDescending(c => c.niveau)
                             .Take(10)
                             .Select(c => new
@@ -168,8 +168,8 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                                 c.idPersonnage,
                                 c.nom,
                                 c.niveau,
-                                c.pointVie,
-                                Valeur = c.pointVie
+                                c.pvMax,
+                                Valeur = c.pvMax
                             })
                             .Cast<object>()
                             .ToListAsync();
@@ -178,7 +178,7 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                     case "experience":
                     case "exp":
                         leaderboard = await _context.Character
-                            .OrderByDescending(c => c.experience)
+                            .OrderByDescending(c => c.exp)
                             .ThenByDescending(c => c.niveau)
                             .Take(10)
                             .Select(c => new
@@ -186,8 +186,8 @@ namespace MyLittleRPG_ElGuendouz.Controllers
                                 c.idPersonnage,
                                 c.nom,
                                 c.niveau,
-                                c.experience,
-                                Valeur = c.experience
+                                c.exp,
+                                Valeur = c.exp
                             })
                             .Cast<object>()
                             .ToListAsync();
