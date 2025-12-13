@@ -241,6 +241,72 @@ namespace MyLittleRPG_ElGuendouz.Controllers
             }
         }
 
+        [HttpGet("CombatHistory/{idPersonnage}")]
+        public async Task<ActionResult<object>> GetCombatHistory(int idPersonnage, [FromQuery] int limit = 20)
+        {
+            try
+            {
+                var character = await _context.Character.FirstOrDefaultAsync(c => c.idPersonnage == idPersonnage);
+                if (character == null)
+                {
+                    return NotFound("Personnage non trouvé.");
+                }
+
+                if (limit <= 0 || limit > 100) limit = 20;
+
+                var combatHistory = await _context.ChasseHistorique
+                    .Where(ch => ch.idPersonnage == idPersonnage)
+                    .OrderByDescending(ch => ch.DateChasse)
+                    .Take(limit)
+                    .Join(_context.Monsters,
+                        ch => ch.idMonstre,
+                        m => m.idMonster,
+                        (ch, m) => new
+                        {
+                            DateCombat = ch.DateChasse,
+                            Victoire = ch.Vaincu,
+                            Monstre = new
+                            {
+                                m.idMonster,
+                                m.nom,
+                                m.type1,
+                                m.type2,
+                                m.pokemonId,
+                                m.spriteUrl
+                            }
+                        })
+                    .ToListAsync();
+
+                // Calculer les statistiques globales
+                var totalCombats = await _context.ChasseHistorique
+                    .CountAsync(ch => ch.idPersonnage == idPersonnage);
+
+                var victoires = await _context.ChasseHistorique
+                    .CountAsync(ch => ch.idPersonnage == idPersonnage && ch.Vaincu);
+
+                var defaites = totalCombats - victoires;
+                var winRate = totalCombats > 0 ? Math.Round((double)victoires / totalCombats * 100, 2) : 0;
+
+                return Ok(new
+                {
+                    IdPersonnage = idPersonnage,
+                    NomPersonnage = character.nom,
+                    Statistiques = new
+                    {
+                        TotalCombats = totalCombats,
+                        Victoires = victoires,
+                        Defaites = defaites,
+                        WinRate = winRate
+                    },
+                    HistoriqueCombats = combatHistory
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors de la récupération de l'historique: {ex.Message}");
+            }
+        }
+
         [HttpPut("Deplacement/{x}/{y}/{email}")]
         public async Task<ActionResult<CombatResultDto>> Deplacer(int x, int y, string email)
         {
