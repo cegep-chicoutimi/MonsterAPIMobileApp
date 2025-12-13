@@ -97,6 +97,150 @@ namespace MyLittleRPG_ElGuendouz.Controllers
             return Ok(validation.Item2);
         }
 
+        [HttpGet("Leaderboard")]
+        public async Task<ActionResult<object>> GetLeaderboard([FromQuery] string category = "niveau")
+        {
+            try
+            {
+                List<object> leaderboard;
+
+                switch (category.ToLower())
+                {
+                    case "niveau":
+                        leaderboard = await _context.Character
+                            .OrderByDescending(c => c.niveau)
+                            .ThenByDescending(c => c.experience)
+                            .Take(10)
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.experience,
+                                Valeur = c.niveau
+                            })
+                            .Cast<object>()
+                            .ToListAsync();
+                        break;
+
+                    case "force":
+                        leaderboard = await _context.Character
+                            .OrderByDescending(c => c.force)
+                            .ThenByDescending(c => c.niveau)
+                            .Take(10)
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.force,
+                                Valeur = c.force
+                            })
+                            .Cast<object>()
+                            .ToListAsync();
+                        break;
+
+                    case "defense":
+                        leaderboard = await _context.Character
+                            .OrderByDescending(c => c.defense)
+                            .ThenByDescending(c => c.niveau)
+                            .Take(10)
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.defense,
+                                Valeur = c.defense
+                            })
+                            .Cast<object>()
+                            .ToListAsync();
+                        break;
+
+                    case "pointvie":
+                    case "pv":
+                        leaderboard = await _context.Character
+                            .OrderByDescending(c => c.pointVie)
+                            .ThenByDescending(c => c.niveau)
+                            .Take(10)
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.pointVie,
+                                Valeur = c.pointVie
+                            })
+                            .Cast<object>()
+                            .ToListAsync();
+                        break;
+
+                    case "experience":
+                    case "exp":
+                        leaderboard = await _context.Character
+                            .OrderByDescending(c => c.experience)
+                            .ThenByDescending(c => c.niveau)
+                            .Take(10)
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.experience,
+                                Valeur = c.experience
+                            })
+                            .Cast<object>()
+                            .ToListAsync();
+                        break;
+
+                    case "chasses":
+                    case "monstreschasses":
+                        var charactersWithChasses = await _context.Character
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                NombreMonstresChasses = _context.ChasseHistorique
+                                    .Where(ch => ch.idPersonnage == c.idPersonnage)
+                                    .Select(ch => ch.idMonstre)
+                                    .Distinct()
+                                    .Count()
+                            })
+                            .OrderByDescending(c => c.NombreMonstresChasses)
+                            .ThenByDescending(c => c.niveau)
+                            .Take(10)
+                            .ToListAsync();
+
+                        leaderboard = charactersWithChasses
+                            .Select(c => new
+                            {
+                                c.idPersonnage,
+                                c.nom,
+                                c.niveau,
+                                c.NombreMonstresChasses,
+                                Valeur = c.NombreMonstresChasses
+                            })
+                            .Cast<object>()
+                            .ToList();
+                        break;
+
+                    default:
+                        return BadRequest($"Catégorie invalide: {category}. Catégories disponibles: niveau, force, defense, pointvie, experience, chasses");
+                }
+
+                return Ok(new
+                {
+                    Category = category,
+                    Top10 = leaderboard
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Erreur lors de la récupération du classement: {ex.Message}");
+            }
+        }
+
         [HttpPut("Deplacement/{x}/{y}/{email}")]
         public async Task<ActionResult<CombatResultDto>> Deplacer(int x, int y, string email)
         {
